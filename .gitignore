@@ -2,3 +2,12 @@
 notebooks/.ipynb_checkpoints/
 .venv-py313/
 .DS_Store
+# Python cache
+__pycache__/
+*.pyc
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Outputs
+outputs/
