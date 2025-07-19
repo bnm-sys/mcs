@@ -1,0 +1,4 @@
+.vscode/
+notebooks/.ipynb_checkpoints/
+.venv-py313/
+.DS_Store
