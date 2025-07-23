@@ -6,10 +6,13 @@ import plotly.express as px
 from notebooks.data_utils import load_and_scale_data
 
 
-def load_data():
-    """Load raw data and return original DataFrame."""
-    df, _ = load_and_scale_data()
-    return df
+REQUIRED_COLUMNS = ['Age', 'Annual Income (k$)', 'Spending Score (1-100)']
+CLUSTER_COL = 'Cluster'
+
+
+def validate_columns(df):
+    """Ensure required columns are present in the uploaded CSV."""
+    return all(col in df.columns for col in REQUIRED_COLUMNS)
 
 
 def scale_features(df, features):
@@ -61,36 +64,48 @@ def suggest_customer_type(profile, mean_income, mean_spending):
         return "Low Income, High Spending"
     else:
         return "Low Income, Low Spending"
-
-
+    
 def main():
     st.title("Mall Customers Clustering with 3D Visualization")
 
-    # Constants
-    FEATURES = ['Age', 'Annual Income (k$)', 'Spending Score (1-100)']
-    CLUSTER_COL = 'Cluster'
+    st.sidebar.header("Upload CSV File")
+    uploaded_file = st.sidebar.file_uploader("Upload your customer CSV file", type=['csv'])
 
-    # Load and prepare data
-    df = load_data()
-    X_scaled = scale_features(df, FEATURES)
+    use_default = False
+    df = None
 
-    # Select number of clusters with slider
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        if not validate_columns(df):
+            st.error(f"Uploaded file must contain the following columns: {REQUIRED_COLUMNS}")
+            return
+    else:
+        st.warning("No file uploaded.")
+        fallback_choice = st.radio(
+            "Do you want to use the default Mall Customers dataset?",
+            ("No", "Yes"),
+            index=0
+        )
+        if fallback_choice == "Yes":
+            df, _ = load_and_scale_data()
+            use_default = True
+        else:
+            st.stop()
+
+    # Proceed with processing
+    X_scaled = scale_features(df, REQUIRED_COLUMNS)
+
     k = st.slider("Select number of clusters (K)", min_value=2, max_value=10, value=5)
-
-    # Perform clustering
     cluster_labels = perform_clustering(X_scaled, k)
-    df[CLUSTER_COL] = cluster_labels.astype(str)  # For categorical coloring
+    df[CLUSTER_COL] = cluster_labels.astype(str)
 
-    # Plot interactive 3D clusters
-    fig = plot_3d_clusters(df, FEATURES, CLUSTER_COL)
+    fig = plot_3d_clusters(df, REQUIRED_COLUMNS, CLUSTER_COL)
     st.plotly_chart(fig, use_container_width=True)
 
-    # Show cluster profiles
-    cluster_profiles = get_cluster_profiles(df, CLUSTER_COL, FEATURES)
+    cluster_profiles = get_cluster_profiles(df, CLUSTER_COL, REQUIRED_COLUMNS)
     st.write("### Cluster Profiles (Mean Values):")
     st.dataframe(cluster_profiles)
 
-    # Show customer type suggestions
     st.write("### Customer Type Suggestions:")
     mean_income = df['Annual Income (k$)'].mean()
     mean_spending = df['Spending Score (1-100)'].mean()
@@ -100,7 +115,6 @@ def main():
         suggestion = suggest_customer_type(profile, mean_income, mean_spending)
         st.write(f"**Cluster {cluster}:** {suggestion}")
 
-    # CSV download button
     csv = df.to_csv(index=False).encode()
     st.download_button(
         label="Download clustered data CSV",
@@ -108,7 +122,3 @@ def main():
         file_name="clustered_customers.csv",
         mime="text/csv"
     )
-
-
-if __name__ == "__main__":
-    main()
