@@ -5,6 +5,15 @@ from sklearn.preprocessing import StandardScaler
 import plotly.express as px
 from notebooks.data_utils import load_and_scale_data
 
+# Import the actual load_and_scale_data function from your notebooks.data_utils
+try:
+    from notebooks.data_utils import load_and_scale_data
+except ImportError:
+    st.error("Could not import 'load_and_scale_data' from 'notebooks/data_utils.py'. "
+             "Please ensure the file exists in the 'notebooks' directory relative to your app.py, "
+             "and that all necessary dependencies are installed.")
+    st.stop()
+
 
 REQUIRED_COLUMNS = ['Age', 'Annual Income (k$)', 'Spending Score (1-100)']
 CLUSTER_COL = 'Cluster'
@@ -16,7 +25,9 @@ def validate_columns(df):
 
 
 def scale_features(df, features):
-    """Scale features using StandardScaler and return scaled numpy array."""
+    """Scale features using StandardScaler and return scaled numpy array.
+    This function is used for uploaded files.
+    """
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(df[features])
     return X_scaled
@@ -71,54 +82,70 @@ def main():
     st.sidebar.header("Upload CSV File")
     uploaded_file = st.sidebar.file_uploader("Upload your customer CSV file", type=['csv'])
 
-    use_default = False
-    df = None
+    df = None # Original DataFrame to store data for display and plotting
+    X_scaled_for_clustering = None # Scaled NumPy array specifically for KMeans input
 
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
         if not validate_columns(df):
             st.error(f"Uploaded file must contain the following columns: {REQUIRED_COLUMNS}")
-            return
+            st.stop() # Stop execution if columns are missing
+        # If a file is uploaded, scale its features for clustering
+        X_scaled_for_clustering = scale_features(df, REQUIRED_COLUMNS)
     else:
-        st.warning("No file uploaded.")
+        st.warning("No file uploaded. You can choose to use the default dataset.")
         fallback_choice = st.radio(
             "Do you want to use the default Mall Customers dataset?",
             ("No", "Yes"),
             index=0
         )
         if fallback_choice == "Yes":
-            df, _ = load_and_scale_data()
-            use_default = True
+            try:
+                # Call the actual load_and_scale_data function from notebooks.data_utils
+                # This function returns the original DataFrame and the scaled NumPy array
+                df, X_scaled_for_clustering = load_and_scale_data()
+            except FileNotFoundError:
+                st.error("Default dataset 'Mall_Customers.csv' not found. "
+                         "Please ensure it's located at `your_project_root/data/Mall_Customers.csv` "
+                         "and your `app.py` is at `your_project_root/app.py` and `data_utils.py` at `your_project_root/notebooks/data_utils.py`.")
+                st.stop()
+            except Exception as e:
+                st.error(f"An unexpected error occurred while loading the default data: {e}")
+                st.stop()
         else:
-            st.stop()
+            st.info("Please upload a CSV file or choose to use the default dataset to proceed.")
+            st.stop() # Stop execution if neither option is taken
 
-    # Proceed with processing
-    X_scaled = scale_features(df, REQUIRED_COLUMNS)
+    # Proceed with processing only if data has been successfully loaded/uploaded
+    if df is not None and X_scaled_for_clustering is not None:
+        k = st.slider("Select number of clusters (K)", min_value=2, max_value=10, value=5)
+        cluster_labels = perform_clustering(X_scaled_for_clustering, k)
+        # Add the cluster labels to the original DataFrame for display and plotting
+        df[CLUSTER_COL] = cluster_labels.astype(str)
 
-    k = st.slider("Select number of clusters (K)", min_value=2, max_value=10, value=5)
-    cluster_labels = perform_clustering(X_scaled, k)
-    df[CLUSTER_COL] = cluster_labels.astype(str)
+        fig = plot_3d_clusters(df, REQUIRED_COLUMNS, CLUSTER_COL)
+        st.plotly_chart(fig, use_container_width=True)
 
-    fig = plot_3d_clusters(df, REQUIRED_COLUMNS, CLUSTER_COL)
-    st.plotly_chart(fig, use_container_width=True)
+        cluster_profiles = get_cluster_profiles(df, CLUSTER_COL, REQUIRED_COLUMNS)
+        st.write("### Cluster Profiles (Mean Values):")
+        st.dataframe(cluster_profiles)
 
-    cluster_profiles = get_cluster_profiles(df, CLUSTER_COL, REQUIRED_COLUMNS)
-    st.write("### Cluster Profiles (Mean Values):")
-    st.dataframe(cluster_profiles)
+        st.write("### Customer Type Suggestions:")
+        mean_income = df['Annual Income (k$)'].mean()
+        mean_spending = df['Spending Score (1-100)'].mean()
 
-    st.write("### Customer Type Suggestions:")
-    mean_income = df['Annual Income (k$)'].mean()
-    mean_spending = df['Spending Score (1-100)'].mean()
+        for cluster in cluster_profiles.index:
+            profile = cluster_profiles.loc[cluster]
+            suggestion = suggest_customer_type(profile, mean_income, mean_spending)
+            st.write(f"**Cluster {cluster}:** {suggestion}")
 
-    for cluster in cluster_profiles.index:
-        profile = cluster_profiles.loc[cluster]
-        suggestion = suggest_customer_type(profile, mean_income, mean_spending)
-        st.write(f"**Cluster {cluster}:** {suggestion}")
+        csv = df.to_csv(index=False).encode()
+        st.download_button(
+            label="Download clustered data CSV",
+            data=csv,
+            file_name="clustered_customers.csv",
+            mime="text/csv"
+        )
 
-    csv = df.to_csv(index=False).encode()
-    st.download_button(
-        label="Download clustered data CSV",
-        data=csv,
-        file_name="clustered_customers.csv",
-        mime="text/csv"
-    )
+if __name__ == "__main__":
+    main()
