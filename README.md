@@ -1,7 +1,7 @@
-# AI_VISEM: Mall Customer Segmentation Visualization
+# MCS : Mall Customer Segmentation 
 
 ## Overview
-AI_VISEM is an interactive web application built with Streamlit that performs customer segmentation analysis using K-means clustering. The application provides detailed 3D visualization of customer clusters and comprehensive data analysis tools.
+MCS is an interactive web application built with Streamlit that performs customer segmentation analysis using K-means clustering. The application provides detailed 3D visualization of customer clusters and comprehensive data analysis tools.
 
 ## Features
 - **Interactive Data Upload**: Upload custom customer data or use the default Mall Customers dataset
