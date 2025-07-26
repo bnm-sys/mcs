@@ -1,41 +1,112 @@
-# Mall Customers Clustering Project
+# AI_VISEM: Mall Customer Segmentation Visualization
 
 ## Overview
+AI_VISEM is an interactive web application built with Streamlit that performs customer segmentation analysis using K-means clustering. The application provides detailed 3D visualization of customer clusters and comprehensive data analysis tools.
 
-This project performs customer segmentation on the Mall Customers dataset using K-Means clustering. The goal is to identify distinct groups of customers based on Age, Annual Income, and Spending Score to help businesses tailor marketing strategies effectively.
+## Features
+- **Interactive Data Upload**: Upload custom customer data or use the default Mall Customers dataset
+- **3D Cluster Visualization**: Dynamic 3D scatter plots showing customer segments
+- **Detailed Data Analysis**:
+  - Gender Distribution Analysis (bar plots and pie charts)
+  - Age Distribution Analysis
+  - Annual Income Distribution
+  - Spending Score Analysis
+  - Age vs. Income Relationship Analysis
+  - Elbow Method for Optimal Cluster Selection
+- **Customer Segmentation**: Automated K-means clustering with adjustable cluster numbers
+- **Cluster Profiling**: Detailed analysis of each cluster's characteristics
+- **Data Export**: Download capabilities for clustered data
+
+## Installation
+
+### Prerequisites
+- Python 3.8+
+- pip package manager
+
+### Setup
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/AI_VISEM.git
+cd AI_VISEM
+```
+
+2. Create and activate a virtual environment (optional but recommended):
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+```
+
+3. Install required packages:
+```bash
+pip install -r requirements.txt
+```
 
 ## Project Structure
+```
+AI_VISEM/
+├── app.py              # Main Streamlit application
+├── notebooks/
+│   └── data_utils.py   # Data loading and preprocessing utilities
+├── data/
+│   └── Mall_Customers.csv  # Default dataset
+└── requirements.txt    # Project dependencies
+```
 
-- `data/`  
-  Contains the dataset file: `Mall_Customers.csv`
+## Usage
 
-- `notebooks/`  
-  Jupyter notebooks for each step:  
-  - `0_data_exploration.ipynb` — Initial data exploration and statistics  
-  - `1_preprocessing.ipynb` — Data preprocessing and feature scaling  
-  - `2_elbow_method.ipynb` — Finding optimal cluster count with the Elbow Method  
-  - `3_clustering.ipynb` — Applying K-Means clustering  
-  - `4_visualization.ipynb` — Visualizing clusters in 2D and 3D  
-  - `5_cluster_analysis.ipynb` — Analyzing clusters and identifying customer types  
-  - `data_utils.py` — Utility functions for loading and scaling data
+1. Start the application:
+```bash
+streamlit run app.py
+```
 
-- `outputs/`  
-  Folder for saving results such as `clustered_customers.csv` with cluster labels
+2. Access the application in your web browser (typically at `http://localhost:8501`)
 
-## Key Libraries Used
+3. Either:
+   - Upload your own CSV file containing customer data
+   - Use the default Mall Customers dataset
 
-- `pandas` — Data manipulation  
-- `scikit-learn` — Data preprocessing and clustering  
-- `matplotlib` & `seaborn` — Data visualization
+4. Required CSV columns:
+   - Age
+   - Annual Income (k$)
+   - Spending Score (1-100)
+   - Gender (optional)
 
-## How to Run
+## Data Analysis Features
 
-1. Ensure you have Python 3.x installed along with the required packages (see `requirements.txt`).  
-2. Open and run the notebooks sequentially in Jupyter Notebook or JupyterLab.  
-3. The final output file `clustered_customers.csv` will be saved inside the `outputs/` folder.
+### Cluster Analysis
+- Adjustable number of clusters (K) using a slider
+- 3D visualization of clusters
+- Detailed cluster profiles with mean values
+- Customer type suggestions based on income and spending patterns
 
-## Summary of Findings
+### Detailed Overview
+- Gender distribution visualization (if gender data is available)
+- Age distribution analysis
+- Income distribution analysis
+- Spending score patterns
+- Relationship analysis between variables
+- Elbow method visualization for optimal K selection
 
-- Five distinct customer clusters were identified based on income and spending behavior.  
-- Customer types include High Income - High Spending, High Income - Low Spending, Low Income - High Spending, and Low Income - Low Spending.  
-- These insights can help tailor marketing campaigns and improve customer engagement.
+## Export Options
+- Download clustered data as CSV
+- Interactive plots with zoom, pan, and save capabilities
+
+## Dependencies
+- streamlit
+- pandas
+- numpy
+- scikit-learn
+- plotly
+
+## License
+Liscensed under CC by Binam Poudel.
+
+## Contributors
+- Binam Poudel
+- Dikshya Rai
+- Pranisha Poudel
+
+## Acknowledgments
+- Mall Customer Dataset (Kaggle)
+- Streamlit Community
+- Python Data Science Community
