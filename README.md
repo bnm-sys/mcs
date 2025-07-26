@@ -3,6 +3,8 @@
 ## Overview
 MCS is an interactive web application built with Streamlit that performs customer segmentation analysis using K-means clustering. The application provides detailed 3D visualization of customer clusters and comprehensive data analysis tools.
 
+## Web Address
+We have an streamlit app up and running at most time, check it out at [Our MCS App](http://mcs-bdp.streamlit.app/)
 ## Features
 - **Interactive Data Upload**: Upload custom customer data or use the default Mall Customers dataset
 - **3D Cluster Visualization**: Dynamic 3D scatter plots showing customer segments
