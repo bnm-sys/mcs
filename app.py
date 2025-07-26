@@ -4,7 +4,7 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import plotly.express as px
 from notebooks.data_utils import load_and_scale_data
-
+import numpy as np
 # Import the actual load_and_scale_data function from your notebooks.data_utils
 try:
     from notebooks.data_utils import load_and_scale_data
@@ -75,7 +75,97 @@ def suggest_customer_type(profile, mean_income, mean_spending):
         return "Low Income, High Spending"
     else:
         return "Low Income, Low Spending"
+
+def show_detailed_overview(df):
+    """Display detailed visualizations of the dataset."""
+    st.write("## Detailed Dataset Overview")
     
+    # 1. Gender Distribution
+    if 'Gender' in df.columns:
+        col1, col2 = st.columns(2)
+        with col1:
+            gender_counts = df['Gender'].value_counts()
+            fig_gender_bar = px.bar(
+                x=gender_counts.index, 
+                y=gender_counts.values,
+                title='Gender Distribution',
+                labels={'x': 'Gender', 'y': 'Count'}
+            )
+            st.plotly_chart(fig_gender_bar, use_container_width=True)
+        
+        with col2:
+            fig_gender_pie = px.pie(
+                values=gender_counts.values,
+                names=gender_counts.index,
+                title='Gender Distribution Ratio'
+            )
+            st.plotly_chart(fig_gender_pie, use_container_width=True)
+
+    # 2. Age Distribution
+    st.write("### Age Analysis")
+    fig_age = px.histogram(
+        df, x='Age',
+        title='Age Distribution',
+        nbins=20
+    )
+    st.plotly_chart(fig_age, use_container_width=True)
+
+    # 3. Annual Income Distribution
+    st.write("### Income Analysis")
+    fig_income = px.histogram(
+        df, x='Annual Income (k$)',
+        title='Annual Income Distribution',
+        nbins=20
+    )
+    st.plotly_chart(fig_income, use_container_width=True)
+
+    # 4. Spending Score Distribution
+    st.write("### Spending Score Analysis")
+    fig_spending = px.histogram(
+        df, x='Spending Score (1-100)',
+        title='Spending Score Distribution',
+        nbins=20
+    )
+    st.plotly_chart(fig_spending, use_container_width=True)
+
+    # 5. Age vs Annual Income
+    st.write("### Relationship Analysis")
+    if 'Gender' in df.columns:
+        fig_age_income = px.scatter(
+            df, 
+            x='Age', 
+            y='Annual Income (k$)',
+            color='Gender',
+            title='Age vs Annual Income'
+        )
+    else:
+        fig_age_income = px.scatter(
+            df, 
+            x='Age', 
+            y='Annual Income (k$)',
+            title='Age vs Annual Income'
+        )
+    st.plotly_chart(fig_age_income, use_container_width=True)
+
+    # 6. Elbow Method
+    st.write("### Clustering Analysis")
+    X = df[REQUIRED_COLUMNS].values
+    inertias = []
+    K = range(1, 11)
+    
+    with st.spinner('Calculating Elbow Curve...'):
+        for k in K:
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans.fit(X)
+            inertias.append(kmeans.inertia_)
+    
+    fig_elbow = px.line(
+        x=list(K), y=inertias,
+        title='Elbow Method for Optimal K',
+        labels={'x': 'Number of Clusters (K)', 'y': 'Inertia'}
+    )
+    st.plotly_chart(fig_elbow, use_container_width=True)
+
 def main():
     st.title("Mall Customers Clustering with 3D Visualization")
 
@@ -147,5 +237,12 @@ def main():
             mime="text/csv"
         )
 
+    if df is not None and X_scaled_for_clustering is not None:
+        # Add this section before the clustering controls
+        if st.button("Show Detailed Overview"):
+            show_detailed_overview(df)
+        
+        st.write("---")  # Add a separator
+        
 if __name__ == "__main__":
     main()
